@@ -1,0 +1,96 @@
+﻿#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <ncurses.h>
+#include <signal.h>
+#include <sys/time.h>
+
+#define DELAY 50000
+
+int max_y = 0, max_x = 0;
+int bird_y = 0, bird_x = 0;
+int velocity = 0;
+int gravity = 1;
+int ch = ' ';
+int is_game_over = 0;
+
+void draw_pipe(int x)
+{
+    int gap = 4;
+    for (int y = 0; y < max_y; y++)
+    {
+        if (y < gap || y > gap + 3)
+        {
+            mvprintw(y, x, "|");
+            mvprintw(y, x + 5, "|");
+        }
+    }
+}
+
+void draw_bird(int y, int x)
+{
+    mvprintw(y, x, "<|>");
+}
+
+void move_bird()
+{
+    if (velocity < 0 || bird_y < max_y - 1)
+    {
+        bird_y += velocity;
+        velocity += gravity;
+    }
+    else
+    {
+        is_game_over = 1;
+    }
+}
+
+void setup()
+{
+    initscr();
+    noecho();
+    curs_set(FALSE);
+    nodelay(stdscr, TRUE);
+
+    getmaxyx(stdscr, max_y, max_x);
+    bird_y = max_y / 2;
+    bird_x = max_x / 3;
+}
+
+void loop()
+{
+    while (!is_game_over)
+    {
+        clear();
+        draw_pipe(max_x / 2);
+        draw_bird(bird_y, bird_x);
+        refresh();
+        usleep(DELAY);
+        ch = getch();
+        switch (ch)
+        {
+            case ' ':
+                velocity = -2;
+                break;
+            case 'q':
+                is_game_over = 1;
+                break;
+            default:
+                break;
+        }
+        move_bird();
+    }
+}
+
+void teardown()
+{
+    endwin();
+}
+
+int main()
+{
+    setup();
+    loop();
+    teardown();
+    return 0;
+}
